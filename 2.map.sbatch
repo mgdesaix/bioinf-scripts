@@ -19,7 +19,7 @@
 set -x
 
 # Run sbatch in for loop for each pair, ex. 18N03686_L3_R1.fastq.gz, set the plate as needed
-# for fq in `ls *R1.fastq.gz`; do sbatch 2.map.amre.sbatch ${fq} Plate1; done
+# for fq in `ls *R1.fastq.gz`; do sbatch 2.map.sbatch ${fq} Plate1; done
 
 # Load java
 module load jdk/1.8.0
