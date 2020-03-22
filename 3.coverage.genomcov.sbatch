@@ -19,14 +19,14 @@
 set -x
 
 # Run in directory with bamfiles
-mkdir err-out
 
-sample=$1
+sample=${1}
 
 touch cov/covSummary.genomecov.txt
 touch cov/covSummary.genomecov.rm0.txt
 
-bedtools genomecov -d -ibam $sample  > cov/"$sample"_cov.genomecov.txt
-awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/"$sample"_cov.genomecov.txt >> cov/covSummary.genomecov.txt
-cat cov/"$sample"_cov.genomecov.txt|awk '$3!=0{print$0}'|awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/"$sample"_cov.genomecov.txt >> cov/covSummary.genomecov.rm0.txt
-rm cov/"$sample"_cov.genomecov.txt
+bedtools genomecov -d -ibam ${sample}  > cov/${sample}_cov.genomecov.txt
+awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/${sample}_cov.genomecov.txt >> cov/covSummary.genomecov.txt
+cat cov/${sample}_cov.genomecov.txt|awk '$3!=0{print$0}'|awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/${sample}_cov.genomecov.txt >> cov/covSummary.genomecov.rm0.txt
+
+rm cov/${sample}_cov.genomecov.txt

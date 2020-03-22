@@ -17,7 +17,7 @@ Generally, this has so far looked like:
 
 ### 1) Remove duplicates
 
-I've been using the program FastUniq to do this, see the _1.trim.sbatch_ file for the full code.  But an example is as follows:
+I've been using the program FastUniq to do this, see the _1.trim.sbatch_ file for the full code.  The gist is that we'll remove the duplicates and then put the new fastq files in a directory called _fastuniq-out_ (make sure to create this directory prior to running).  An example is as follows:
 
 ```sh
 #Run in directory where your raw .fq.gz files are
@@ -58,7 +58,7 @@ I align samples to the reference genome with BWA and then add all of the appropr
 $ bwa index ROFI_YwTfa_filtered.fasta
 ```
 
-Then, I run through the _2.map.sbatch_ script.
+Then, I run through the _2.map.sbatch_ script. Here, we'll take the files from the _fastuniq-out_ directory and put them in a new directory called _dedup_ (create directory before running!). Delete all the files starting with _aln*_ when it has successfully completed.
 
 ```sh
 # Run sbatch in for loop for each pair, ex. 18N03686_L3_R1.fastq.gz, set the plate as needed
@@ -92,4 +92,33 @@ cd ../bwa_dedup
 java -jar ~/programs/picard.jar AddOrReplaceReadGroups INPUT=aln_${rgid}.bam RGID=${rgid} RGLB=${rglb} RGPL=illumina RGPU=${rgpu} RGSM=${rgsm} OUTPUT=${output} VALIDATION_STRINGENCY=SILENT
 ~/programs/samtools-1.9/samtools index ${output}
 ```
+
+### 3) Check coverage
+
+Now we've got some sweet bamfiles, let's check how coverage depth is across them.  Hopefully no individuals are woefully inadequate. See the script _3.coverage.genomcov.sbatch_.
+
+```sh
+# Run in directory with bamfiles
+
+sample=${1}
+
+touch cov/covSummary.genomecov.txt
+touch cov/covSummary.genomecov.rm0.txt
+
+bedtools genomecov -d -ibam ${sample}  > cov/${sample}_cov.genomecov.txt
+awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/${sample}_cov.genomecov.txt >> cov/covSummary.genomecov.txt
+cat cov/${sample}_cov.genomecov.txt|awk '$3!=0{print$0}'|awk '{if($3<500) {total+=$3; ++lines}} END {print FILENAME," ",total/lines}' cov/${sample}_cov.genomecov.txt >> cov/covSummary.genomecov.rm0.txt
+
+rm cov/${sample}_cov.genomecov.txt
+```
+
+
+
+
+
+
+
+
+
+
 
