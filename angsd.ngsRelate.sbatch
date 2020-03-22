@@ -22,7 +22,12 @@ set -x
 
 set -x
 
-~/programs/ngsRelate/ngsRelate -g CAWA.Plate1_2.maf03.glf.gz -n 110 -f CAWA.Plate1_2.maf03.mafs.freq -z CAWA.Plate1_2.ind.bamlist.ind > CAWAsnp.Plate1_2.maf03.res
+ngsRelate=~/programs/ngsRelate/ngsRelate
+vcf=${1}
+out=${vcf}.relatedness
 
+# ${ngsRelate} -g CAWA.Plate1_2.maf03.glf.gz -n 110 -f CAWA.Plate1_2.maf03.mafs.freq -z CAWA.Plate1_2.ind.bamlist.ind > CAWAsnp.Plate1_2.maf03.res
 
+# Parse a VCF file!
 
+${ngsRelate} -h ${vcf} -O ${out}
