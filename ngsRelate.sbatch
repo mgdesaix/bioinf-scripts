@@ -30,4 +30,4 @@ out=${vcf}.relatedness
 
 # Parse a VCF file!
 
-${ngsRelate} -h ${vcf} -A AF -O ${out}
+${ngsRelate} -h ${vcf} -A AF -c 1 -O ${out}
