@@ -30,7 +30,7 @@ mkdir err-out
 
 bams=bams.list
 # where list is from:                                                                                                                                        
-# for list in `ls ~/scratch/AMRE/bamfiles/intervals/interval2mb/Interval.2*.list`; do sbatch /projects/mgdesaix@colostate.edu/bioinf-scripts//vcf.1.haplotypecaller.sbatch $list; done
+# for list in `ls ~/scratch/AMRE/bamfiles/intervals/interval2mb/Interval.2*.list`; do sbatch /projects/mgdesaix@colostate.edu/bioinf-scripts/vcf.1.haplotypecaller.sbatch $list; done
 # ex. Interval.4mb.001.list
 
 list=$1
