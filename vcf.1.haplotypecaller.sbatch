@@ -15,7 +15,7 @@
 #SBATCH --ntasks-per-node 1
 #SBATCH --mem=4G
 #SBATCH --mail-type=FAIL
-#SBATCH  --mail-user=mgdesaix@gmail.com
+#SBATCH --mail-user=mgdesaix@gmail.com
 #################
 #echo commands to stdout
 set -x
@@ -52,4 +52,4 @@ gatk --java-options "-Xmx4g" \
     -L ${list}
 
 bcftools view -o ${nfile} -O z ${ofile}
-bcftools index -f -t "{nfile}
+bcftools index -f -t ${nfile}
