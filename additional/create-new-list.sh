@@ -21,7 +21,7 @@ do
 		POS=$(echo $(($(echo ${last} | awk -F ":" '{print $2}')+1)))
 		LENGTH=$(echo ${SCAFF} | awk -F "size" '{print $2}')
 		
-		echo $list | awk -v scaff=$SCAFF -v pos=$POS -v len=$LENGTH '$1==scaff {print scaff ":" pos "-" len; go=1; next} go==1 {print}' > ${new_list}
+		awk -v scaff=$SCAFF -v pos=$POS -v len=$LENGTH '$1==scaff {print scaff ":" pos "-" len; go=1; next} go==1 {print}' ${list}> ${new_list}
 		echo ${vcf} ${list} ${new_list} >> new-lists.txt
 	fi
 done
