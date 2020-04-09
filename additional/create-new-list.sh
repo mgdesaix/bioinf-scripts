@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# run from err-out directory
 touch new-lists.txt
 
 for err in *.err;
@@ -17,10 +18,10 @@ do
 		
 		last=$(zcat ${vcf_dir}/clean.${vcf_file} | tail -n 1 | awk '{print $1 ":" $2}')
 		SCAFF=$(echo ${last} | awk -F ":" '{print $1}')
-		POS=$(echo $(($(echo ${drop_last} | awk -F ":" '{print $2}')+1)))
+		POS=$(echo $(($(echo ${last} | awk -F ":" '{print $2}')+1)))
 		LENGTH=$(echo ${SCAFF} | awk -F "size" '{print $2}')
 		
-		awk -v scaff=$SCAFF -v pos=$POS -v len=$LENGTH '$1==scaff {print scaff ":" pos "-" len; go=1; next} go==1 {print}' $(echo ${list}) > ${new_list}
+		echo $list | awk -v scaff=$SCAFF -v pos=$POS -v len=$LENGTH '$1==scaff {print scaff ":" pos "-" len; go=1; next} go==1 {print}' > ${new_list}
 		echo ${vcf} ${list} ${new_list} >> new-lists.txt
 	fi
 done
