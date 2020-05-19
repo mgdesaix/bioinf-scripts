@@ -37,4 +37,4 @@ out=${vcf}.relatedness.p8long.noinbreeding
 # [-c 1] uses called genotypes
 # [-p 8] number of threads
 
-${ngsRelate} -h ${vcf} -A AF -o -c 1 -p 8 -O ${out}
+${ngsRelate} -h ${vcf} -A AF -o 1 -c 1 -p 8 -O ${out}
