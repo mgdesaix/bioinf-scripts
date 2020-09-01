@@ -30,7 +30,7 @@ fastq=$(echo ${fqgz} | rev | cut -f2- -d'_' | rev)
 mkdir -p err-out
 
 ###Identify program directories
-FASTUNIQ=/home/mgdesaix@colostate.edu/programs/FastUniq/source # Directory for fastuniq
+FASTUNIQ=/projects/mgdesaix@colostate.edu/programs/FastUniq/source # Directory for fastuniq
 
 outdir=/home/mgdesaix@colostate.edu/scratch/AMRE/bamfiles/Plate6/fastuniq-out
 
