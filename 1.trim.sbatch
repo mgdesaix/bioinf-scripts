@@ -3,6 +3,7 @@
 #SBATCH --job-name=trim
 #SBATCH --output=./err-out/trim.%j.out
 #SBATCH --error=./err-out/trim.%j.err
+#SBATCH --array=1-50
 ################
 #SBATCH -t 24:00:00
 #SBATCH --qos=normal
@@ -11,14 +12,19 @@
 #################
 # Note: 4.84G/core or task
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node 2
+#SBATCH --ntasks-per-node 1
 #################
-#SBATCH --mem=8G
+#SBATCH --mem=4G
 #################
 set -x
 
-#Run in directory where your raw .fq.gz files are
-#for fqgz in `ls *1.fq.gz`; do sbatch 1.trim.amre.sbatch ${fqgz}; done
+#Run in directory where your raw .fq.gz files are and all _1.fq.gz are listed in a file fastq-files.txt
+
+# ex. DNASERU3038_CKDL200146239-1a-N701-N507_H772MCCX2_L1_1.fq.gz
+fqgz=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastq-files.txt)
+sample=$(echo ${fqgz} | cut -f1 -d'_')
+
+fastq=$(echo ${fqgz} | rev | cut -f2- -d'_' | rev)
 
 # Use -p flag so you don't get errors if directory already exists!
 mkdir -p err-out
@@ -26,12 +32,8 @@ mkdir -p err-out
 ###Identify program directories
 FASTUNIQ=/home/mgdesaix@colostate.edu/programs/FastUniq/source # Directory for fastuniq
 
-outdir=/scratch/summit/mgdesaix@colostate.edu/AMRE/redo-sequence/fastuniq-out
-### Variables
-# ex. DNASERU3038_CKDL200146239-1a-N701-N507_H772MCCX2_L1_1.fq.gz
-fqgz=${1}
-sample=`echo ${fqgz} | cut -f1 -d'_'`
-fastq=`echo ${fqgz} | cut -f1,2,3,4 -d'_'`
+outdir=/home/mgdesaix@colostate.edu/scratch/AMRE/bamfiles/Plate6/fastuniq-out
+
 
 ###Remove duplicates (potential PCR artifacts) using fastuniq
 
