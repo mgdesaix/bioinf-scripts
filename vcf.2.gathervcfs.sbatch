@@ -20,8 +20,6 @@
 set -x
 ##################
 
-mkdir err-out
-
 module load jdk
 
 # Run from folder with all of the vcfs and the list
