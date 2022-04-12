@@ -1,60 +1,33 @@
 #!/bin/bash
 #set a job name
-#SBATCH --job-name=map
-#SBATCH --output=./err-out/map.%j.out
-#SBATCH --error=./err-out/map.%j.err
-#SBATCH --array=1-50
+#SBATCH --job-name=ROFI-bwa-map
+#SBATCH --output=./err-out/bwa-map-ROFI.%A_%a.out
+#SBATCH --error=./err-out/bwa-map-ROFI.%A_%a.err
 ################
-#SBATCH -t 24:00:00
+#SBATCH --time=24:00:00
 #SBATCH --qos=normal
 #SBATCH --partition=shas
-#SBATCH --mail-type=FAIL
-#SBATCH --mail-user=mgdesaix@gmail.com
 #################
 # Note: 4.84G/core or task
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node 1
 #################
-#SBATCH --mem=4G
+#SBATCH --mem=16G
+#SBATCH --array=1-448
 #################
-set -x
 
-# Load java
-module load jdk/1.8.0
+source ~/.bashrc
 
-# Use -p flag so you don't get errors if directory already exists!
-mkdir -p err-out
+conda activate /projects/mgdesaix@colostate.edu/miniconda3/envs/bioinf
+module load jdk
 
-##Variables
+picard=/projects/mgdesaix@colostate.edu/programs/picard.jar
 
-# ex. 08N10200_R1.fastq.gz
-fqgz=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastq-files.txt)
-# ex. 08N10200
-sample=$(echo ${fqgz} | cut -f1 -d'_')
-# ex. Plate6
-plate=Plate6
+read1=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastqs-read1-list)
+# ex. A9033_CKDL200146239-1a-N703-N505_H772MCCX2_L1_1.fq.gz
 
-# RGID - read group ID
-rgid=${plate}.${sample} # ex. Plate6.08N10200
-# RGLB - read group library
-rglb=${plate} # ex. Plate1
-# RGPU - read group platform unit
-rgpu=${rgid} # same as rgid
-# RGSM - read group sample
-rgsm=${sample} # 08N10200
-# Output
-output=${rgid}_RG.bam
+read1_trim=$(echo ${read1} | sed 's/1.fq.gz/1_val_1.fq.gz/')
+# ex. A9033_CKDL200146239-1a-N703-N505_H772MCCX2_L1_1_val_1.fq.gz
 
-samtools=/projects/mgdesaix@colostate.edu/programs/samtools-1.9
-BWA=/projects/mgdesaix@colostate.edu/programs/bwa
-reference=/projects/mgdesaix\@colostate.edu/reference/YWAR/YWAR.fa
+read2_trim=$(echo ${read1} | sed 's/1.fq.gz/2_val_2.fq.gz/')
 
-${BWA}/bwa mem -t 2 ${reference} ./${sample}_R1.fastq.gz ./${sample}_R2.fastq.gz > ../bwa_dedup/aln_${rgid}.sam
+cd trimmed/
 
-cd ../bwa_dedup
-
-${samtools}/samtools sort -o aln_${rgid}.bam aln_${rgid}.sam
-
-java -jar ~/programs/picard.jar AddOrReplaceReadGroups INPUT=aln_${rgid}.bam RGID=${rgid} RGLB=${rglb} RGPL=illumina RGPU=${rgpu} RGSM=${rgsm} OUTPUT=${output} VALIDATION_STRINGENCY=SILENT
-
-${samtools}/samtools index ${output}
