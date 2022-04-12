@@ -1,6 +1,6 @@
 # WGS Preprocessing
 
-Here, I provide scripts for trimming adapters, mapping to reference, marking PCR duplicates, as well as some of the handy one-liner codes I tend to forget to make all of this happen.
+Here, I provide scripts for trimming adapters, mapping to reference, marking PCR duplicates, as well as some of the handy one-liner codes I tend to forget to make all of this happen. The scripts are for running job arrays on SLURM. It's a *great* idea to test out the code from a script in an interactive session prior to submitting 100s of jobs in an array!
 
 To start working with all of the raw fastq files, I like to have them all together in one directory, that I call `fastqs/`. Unfortunately, this is not how they come from sequencing and instead they tend to be nested in different directories. An easy way to move all of them is with the `find` command in Linux. To collect all of the fastqs (ending with `.fq.gz`) in one place, I `cd` to the directory of interest, and then enter:
 
@@ -66,6 +66,8 @@ An example job script is available: [get_trimmed.sh](./slurm-scripts/get_trimmed
 
 ## 2) Mapping, sorting, add read groups
 
+In this step, I will map the paired end reads (fastq files) to the reference genome and produce a SAM file. Then I will sort, output a BAM file, and add read groups.
+
 To map to the reference genome, I use [BWA](http://bio-bwa.sourceforge.net/bwa.shtml). Pretty much everything I use is available via Mamba/Conda. The reference genome first needs to be indexed by BWA, as well as by samtools:
 
 ```sh
@@ -75,9 +77,47 @@ samtools faidx reference.fasta
 
 **Note:** Make sure to check that `bwa index` builds the final file `reference.fasta.sa`. If there's not enough memory for the job then `bwa` will successfully create all indexes **except** `.sa` which is also essential. 
 
+All my fastq files have a similar naming convention, so I am able to use the information from this to define my read groups. This script also assumes I already have `mapped/` and `read_group` directories where I store output. I do delete a temporary SAM file in this script, but generally I tend to store outputs in different directories and only delete manually after the analysis when I know it has completed successfully.
+
+The meat of the script is as follows, and you can find a full example script here: [get_mapped.sh](./slurm-scripts/get_mapped.sh).
+
+```sh
+read1=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastqs-read1-trim-list)
+# ex. 19N00143_CKDL190142002-1a-N703-N506_H723KCCX2_L7_1_val_1.fq.gz
+
+read2=$(echo ${read1} | sed 's/1_val_1/2_val_2/')
+
+# RGLB - read group library
+rglb=$(echo ${read1} | cut -f3,4 -d_)
+
+# RGPU - read group platform unit
+rgpu=$(echo ${read1} | cut -f3 -d_)
+
+# RGSM - read group sample
+# ex. 17N04030
+rgsm=$(echo ${read1} | cut -f1 -d_)
+
+# RGPL - read group platform
+rgpl=ILLUMINA
+
+output=$(echo ${read1} | cut -f1,3,4 -d_)
+
+bwa mem -t 4 ${reference} ./trimmed/${read1} ./trimmed/${read2} > ./mapped/${output}.sam
+
+cd mapped/
+
+samtools sort -o ${output}.bam ${output}.sam
+
+rm ${output}.sam
+
+java -jar ${picard} AddOrReplaceReadGroups I=${output}.bam RGLB=${rglb} RGPL=${rgpl} RGPU=${rgpu} RGSM=${rgsm} O=../read_group/${output}.\
+RG.bam VALIDATION_STRINGENCY=SILENT
+cd ../read_group
+samtools index ${output}.RG.bam
+```
 
 
-The full script is as follows:
+
 
 
 
