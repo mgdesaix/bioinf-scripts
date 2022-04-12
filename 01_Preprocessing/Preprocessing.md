@@ -59,3 +59,5 @@ s17N04030_USPD16103200-N709-AK394_H3LJCCCX2_L5_1.fq.gz
 s17N04030_USPD16103200-N709-AK394_H3LJCCCX2_L6_1.fq.gz
 s17N04031_CKDL190138994-1a-N710-N504_H3LT3CCX2_L6_1.fq.gz
 ```
+
+An example job script is available: [get_trimmed.sh](./slurm-scripts/get_trimmed.sh)

@@ -1,49 +1,27 @@
 #!/bin/bash
 #set a job name
-#SBATCH --job-name=trim_galore
-#SBATCH --output=./err-out/trim_galore.%j.out
-#SBATCH --error=./err-out/trim_galore.%j.err
-#SBATCH --array=1-50
+#SBATCH --job-name=ROFI-trim_galore
+#SBATCH --output=./err-out/trim_galore-ROFI.%A_%a.out
+#SBATCH --error=./err-out/trim_galore-ROFI.%A_%a.err
 ################
-#SBATCH -t 24:00:00
+#SBATCH --time=1:00:00
 #SBATCH --qos=normal
 #SBATCH --partition=shas
-#SBATCH --mail-type=FAIL
 #################
 # Note: 4.84G/core or task
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node 1
 #################
-#SBATCH --mem=4G
+#SBATCH --mem=16G
+#SBATCH --array=1-448
 #################
-set -x
 
-#Run in directory where your raw .fq.gz files are and all _1.fq.gz are listed in a file fastq-files.txt
+source ~/.bashrc
 
-# ex. DNASERU3038_CKDL200146239-1a-N701-N507_H772MCCX2_L1_1.fq.gz
-fqgz=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastq-files.txt)
-sample=$(echo ${fqgz} | cut -f1 -d'_')
+conda activate cutadapt
+module load jdk
 
-fastq=$(echo ${fqgz} | rev | cut -f2- -d'_' | rev)
+read1=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastqs-read1-list)
+read2=$(echo ${read1} | sed 's/1.fq.gz/2.fq.gz/')
 
-# Use -p flag so you don't get errors if directory already exists!
-mkdir -p err-out
+cd raw/
 
-###Identify program directories
-FASTUNIQ=/projects/mgdesaix@colostate.edu/programs/FastUniq/source # Directory for fastuniq
-
-outdir=/home/mgdesaix@colostate.edu/scratch/AMRE/bamfiles/Plate6/fastuniq-out
-
-
-###Remove duplicates (potential PCR artifacts) using fastuniq
-
-	echo ${fastq}_1.fq > pair.${sample}.txt
-	echo ${fastq}_2.fq >> pair.${sample}.txt
-	gunzip ${fastq}_1.fq.gz
-	gunzip ${fastq}_2.fq.gz
-	${FASTUNIQ}/fastuniq -i pair.${sample}.txt -t q -o ${outdir}/${sample}_R1.fastq -p ${outdir}/${sample}_R2.fastq
-	gzip -f ${fastq}_1.fq
-	gzip -f ${fastq}_2.fq
-	gzip -f ${outdir}/${sample}_R1.fastq
-	gzip -f ${outdir}/${sample}_R2.fastq
-	rm pair.${sample}.txt
+trim_galore --paired --fastqc --cores 4 ${read1} ${read2} --output_dir ../trimmed/
