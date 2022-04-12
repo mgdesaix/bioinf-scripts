@@ -2,6 +2,16 @@
 
 Here, I provide scripts for trimming adapters, mapping to reference, marking PCR duplicates, as well as some of the handy one-liner codes I tend to forget to make all of this happen. The scripts are for running job arrays on SLURM. It's a *great* idea to test out the code from a script in an interactive session prior to submitting 100s of jobs in an array!
 
+The order of operations for the preprocessing workflow is:
+
+**1.** Trimming adapters ([get_trimmed.sh script](./slurm-scripts/get_trimmed.sh))
+
+**2.** Mapping to reference ([get_mapped.sh script](./slurm-scripts/get_mapped.sh))
+
+**3.** Merging BAMs ([get_merged.sh script](./slurm-scripts/get_merged.sh))
+
+**4.** Marking and removing duplicates ([get_duplicates_removed.sh script](./slurm-scripts/get_duplicates_removed.sh))
+
 To start working with all of the raw fastq files, I like to have them all together in one directory, that I call `fastqs/`. Unfortunately, this is not how they come from sequencing and instead they tend to be nested in different directories. An easy way to move all of them is with the `find` command in Linux. To collect all of the fastqs (ending with `.fq.gz`) in one place, I `cd` to the directory of interest, and then enter:
 
 ```sh
