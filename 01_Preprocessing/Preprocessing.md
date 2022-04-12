@@ -8,7 +8,7 @@ To start working with all of the raw fastq files, I like to have them all togeth
 find . -name '*.fq.gz' -exec mv {} ./ \;
 ```
 
-As a side note, directory organization is invaluable and I am always trying to refine my system. For example, my American Redstart (*Leucosticte australis*) sequence data is organized in the following fashion:
+As a side note, directory organization is invaluable and I am always trying to refine my system. For example, my American Redstart (*Setophaga ruticilla*) sequence data is organized in the following fashion:
 
 ```
 .
