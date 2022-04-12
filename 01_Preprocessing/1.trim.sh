@@ -1,8 +1,8 @@
 #!/bin/bash
 #set a job name
-#SBATCH --job-name=trim
-#SBATCH --output=./err-out/trim.%j.out
-#SBATCH --error=./err-out/trim.%j.err
+#SBATCH --job-name=trim_galore
+#SBATCH --output=./err-out/trim_galore.%j.out
+#SBATCH --error=./err-out/trim_galore.%j.err
 #SBATCH --array=1-50
 ################
 #SBATCH -t 24:00:00
