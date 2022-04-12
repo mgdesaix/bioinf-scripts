@@ -8,11 +8,11 @@ To start working with all of the raw fastq files, I like to have them all togeth
 find . -name '*.fq.gz' -exec mv {} ./ \;
 ```
 
-As a side note, directory organization is invaluable and I am always trying to refine my system. For example, my American Redstart (*Setophaga ruticilla*) sequence data is organized in the following fashion:
+As a side note, directory organization is invaluable and I am always trying to refine my system. For example, my Brown-capped Rosy-Finch (*Leucosticte australis*) sequence data is organized in the following fashion:
 
 ```
 .
-+-- AMRE
++-- ROFI
 |   +-- fastqs
 |       +-- err-out
 |       +-- raw
@@ -35,7 +35,7 @@ The basic Trim Galore command I use is:
 trim_galore --paired --fastqc --cores 4 ${read1} ${read2} --output_dir ../trimmed/
 ```
 
-This will trim the adapters from paired-end data and do some basic quality trimming as well. Trim Galore automatically detects the adapter sequences. Using 4 cores and 16 GB mem, this takes only 10-20 min. per sample. I run this as a job array in Slurm, which looks like:
+This will trim the adapters from paired-end data and do some basic quality trimming as well. Trim Galore automatically detects the adapter sequences. Using 4 cores and 16 GB mem, this takes only 10-30 min. per sample. I run this as a job array in Slurm, which looks like:
 
 ```sh
 source ~/.bashrc
@@ -79,7 +79,9 @@ samtools faidx reference.fasta
 
 All my fastq files have a similar naming convention, so I am able to use the information from this to define my read groups. This script also assumes I already have `mapped/` and `read_group` directories where I store output. I do delete a temporary SAM file in this script, but generally I tend to store outputs in different directories and only delete manually after the analysis when I know it has completed successfully.
 
-The meat of the script is as follows, and you can find a full example script here: [get_mapped.sh](./slurm-scripts/get_mapped.sh).
+I won't go into detail here on read groups, but you can learn about them from the experts at [Broad Institute](https://gatk.broadinstitute.org/hc/en-us/articles/360035890671-Read-groups). But a key factor for our use of the read groups is making sure the sample name, which identifies an individual, is properly identified. If an individual is sequenced across multiple lanes, then all files should have the same sample name read group (RGSM). 
+
+The meat of the script is as follows, and you can find a full example script here: [get_mapped.sh](./slurm-scripts/get_mapped.sh). Again with 4 threads and 16 GB, this takes 1-2 hours per sample for my data.
 
 ```sh
 read1=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' fastqs-read1-trim-list)
@@ -115,6 +117,41 @@ RG.bam VALIDATION_STRINGENCY=SILENT
 cd ../read_group
 samtools index ${output}.RG.bam
 ```
+
+## 3) Merging BAM files
+
+Now that we have sorted BAM files with read groups it's time to merge them. I first make a file that has all of the *sample names*,
+
+```sh
+--% wc -l rofi-sample-list
+147 rofi-sample-list
+--% head -n 3 rofi-sample-list
+17N04030
+17N04031
+17N04032
+```
+
+This sample list identifies all 147 individuals. In my ROFI data, I had 448 separate BAM files, but this will now be reduced to a data set of 147 BAM files merged for each individual. The code is below and the full script can be found here: [get_merged.sh](./slurm-scripts/get_merged.sh). This runs quick at <1 hr per sample.
+
+
+```sh
+conda activate /projects/mgdesaix@colostate.edu/miniconda3/envs/bioinf
+
+sample_id=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' rofi-sample-list)
+# ex. 17N04030
+
+merge_code="samtools merge --threads 4 ./merged/merged_${sample_id}.bam"
+
+for i in `ls ./read_group/${sample_id}*bam`; do merge_code="${merge_code} ${i}"; done
+
+${merge_code}
+
+samtools index ./merged/merged_${sample_id}.bam
+```
+
+**Note:** Because the `samtools merge` function is in the format `samtools merge [output] [input1 input2 ... inputn]`, the code above loops through all BAM files with this sample name and then tacks them on to the code as a character string `${merge_code}`. Once it has looped through then the code is run from the variable name `${merge_code}`.
+
+## 4) Marking duplicates
 
 
 
