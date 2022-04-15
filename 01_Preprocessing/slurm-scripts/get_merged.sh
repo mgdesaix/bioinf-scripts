@@ -21,10 +21,10 @@ conda activate /projects/mgdesaix@colostate.edu/miniconda3/envs/bioinf
 
 sample_id=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' rofi-sample-list)
 
-merge_code="samtools merge --threads 4 ./merged/merged_${sample_id}.bam"
+merge_code="samtools merge --threads 4 ./merged/${sample_id}.merged.bam"
 
 for i in `ls ./read_group/${sample_id}*bam`; do merge_code="${merge_code} ${i}"; done
 
 ${merge_code}
 
-samtools index ./merged/merged_${sample_id}.bam
+samtools index ./merged/${sample_id}.merged.bam

@@ -150,21 +150,40 @@ conda activate /projects/mgdesaix@colostate.edu/miniconda3/envs/bioinf
 sample_id=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' rofi-sample-list)
 # ex. 17N04030
 
-merge_code="samtools merge --threads 4 ./merged/merged_${sample_id}.bam"
+merge_code="samtools merge --threads 4 ./merged/${sample_id}.merged.bam"
 
 for i in `ls ./read_group/${sample_id}*bam`; do merge_code="${merge_code} ${i}"; done
 
 ${merge_code}
 
-samtools index ./merged/merged_${sample_id}.bam
+samtools index ./merged/${sample_id}.merged.bam
 ```
 
 **Note:** Because the `samtools merge` function is in the format `samtools merge [output] [input1 input2 ... inputn]`, the code above loops through all BAM files with this sample name and then tacks them on to the code as a character string `${merge_code}`. Once it has looped through then the code is run from the variable name `${merge_code}`.
 
 ## 4) Marking duplicates
 
+The final cleaning of the BAM files involves removing PCR duplicates and cleaning paired-end sequences. I use `GATK` and `BamUtils` for this step. This process can take awhile and the `MarkDuplicatesSpark` function uses a lot of memory - I give it 64GB and a 24-hour window to finish (though should take a good bit less).
 
+```sh
+bam=$(awk -v N=$SLURM_ARRAY_TASK_ID 'NR == N {print $1}' rofi-merged-list)
+id=$(echo ${bam} | cut -d '.' -f1)
+marked=$(echo ${id}_marked.bam)
+clipped=$(echo ${id}_marked_clipped.bam)
 
+gatk MarkDuplicatesSpark -I ./merged/${bam} -O ./marked/${marked} --remove-sequencing-duplicates --tmp-dir ~/scratch/tmp
+
+bam clipOverlap --in ./marked/${marked} --out ./overlap_clipped/${clipped} --stats
+```
+
+The `rofi-merged-list` is just a list of all merged BAMS:
+
+```sh
+--% head -n 3 rofi-merged-list
+17N04030.merged.bam
+17N04031.merged.bam
+17N04032.merged.bam
+```
 
 
 
