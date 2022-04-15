@@ -4,7 +4,7 @@ author: "Matt DeSaix"
 output: html_notebook
 ---
 
-This script is for creating a GATK pipeline that produces a nice and tidy vcf file from bam files.  I'm doing this for some whole genome sequence data of *Setophaga ruticilla* and want that nice GATK vcf file instead of ANGSD's vcf file (which apparently is sub-optimal). One tricky part is I'm trying to do this FAST by breaking up the bam files by the scaffolds in order to run lots of small jobs quickly. However, GATK is *mildly* confusing and this is my first run through with it so we'll see how it goes.  I'm currently using GATK version 4.1.4.0 and have already found that googling tools can be an issue because older documentation comes up first and typically doesn't work because things have changed.  Keep this in mind...
+This script is for creating a GATK pipeline that produces a nice and tidy VCF file from BAM files.  I'm currently using GATK version 4.1.4.0 and have already found that googling tools can be an issue because older documentation comes up first and typically doesn't work because things have changed.  Keep this in mind...
 
 Software I use:
 
@@ -16,7 +16,7 @@ Software I use:
 
 - htslib (ver 1.9)
 
-Below I outline my workflow for obtaining a final VCF file (Part 1) and also the more *headache-y* workflow for getting gvcf file intermediaries (Part 2) which are supposed to speed things up if you plan on adding more sequences down the line (avoids having the go back to the bamfiles, but my experience suggests this method may still be a pain unless you are routinely updating massive sample sizes)
+Below I outline my workflow for obtaining a final VCF file. I already have all the samples I plan to use, so I am not following the practice of obtaining gVCF files for updating at a later point.
 
 ## Part 1) Create VCF file
 
@@ -607,5 +607,12 @@ $ cat intervals6mb.txt | sed 's/^[ \t]*//;s/[ \t]*$//' > intervals6mb.tmp.txt
 $ rm intervals6mb.txt
 $ mv ./intervals6mb.tmp.txt ./intervals6mb.txt
 ```
+
+
+my awk code to print new files based on a total of base pairs
+```sh
+ awk 'BEGIN {id=1; tot=0} {if(tot<2e6) {tot+=$2; k=sprintf("%03d",id); print $1 >> "interval2mb_" k ".txt"} else {id+=1; tot=$2; k=sprintf("%03d", id); print $1 >> "interval2mb_" k ".txt";}}' rofi-scaffold-interval-lengths-1mb.txt
+```
+
 
 
